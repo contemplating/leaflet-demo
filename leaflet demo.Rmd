@@ -1,0 +1,46 @@
+---
+title: "Leaflet demo"
+author: "J.L. van der Plas"
+date: "26 November 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(leaflet)
+```
+
+## Leaflet demo
+
+This is a small demonstration of leaflet, a tool for crearting maps in R. We will show a map of the world, with markers that show the name pof the coutry and the popuploation when you click on the marker. 
+
+## Loading the data demo
+
+We combine the population data from the world bank with the longitude / lattidute data from the open suorce project 
+
+```{r load data}
+countries <- read.csv("countries.csv", sep=";")
+countries_pop <- read.csv("countries_population.csv", sep=",")
+countries_complete <- merge(countries, countries_pop, by.x = "cca3", by.y = "CountryCode")
+countries_complete$coord = as.character(countries_complete$latlng)
+coords_split <- strsplit(countries_complete$coord,split=",")
+countries_complete$lat <- as.numeric(unlist(coords_split)[2*(1:nrow(countries_complete))-1])
+countries_complete$lng <- as.numeric( unlist(coords_split)[2*(1:nrow(countries_complete))])
+countries_complete$popupText <- paste0("<b>Country</b>: ",
+                countries_complete$CountryName,
+                "<br/>", "<b>Population</b>:",
+                as.character(countries_complete$X2016))
+```
+
+## Create the map
+
+We create the map using mostly the default options, except we enable clustering of markers 
+
+```{r pressure, echo=FALSE}
+mymap <- leaflet(countries_complete) %>% 
+  addTiles() %>% 
+  addMarkers(~lng, ~lat, popup = ~popupText, clusterOptions = markerClusterOptions())
+
+mymap
+```
+
